@@ -1,0 +1,474 @@
+import { useEffect, useMemo, useState } from 'react'
+import { runAssignment } from '../../../shared/assignEngine.js'
+import {
+  loadWorkbenchData,
+  addRoom,
+  updateRoom,
+  unassignStudentsOfRoom,
+  deleteRoom,
+  setStudentRoom,
+  applyAssignments,
+  saveHistorySnapshot,
+  latestAiSnapshot,
+} from '../api/rooms.js'
+
+// 手动分配的合法性校验:红线(男女混住)与超员 → 拒绝;睡眠冲突 → 允许但黄标提示
+function checkMove(student, room, members) {
+  if (room.gender_label && room.gender_label !== student.gender)
+    return `违反红线:${room.room_no} 已住${room.gender_label}生,不能混住`
+  if (members.length >= room.capacity) return `超员:${room.room_no} 只能住 ${room.capacity} 人`
+  return null
+}
+
+function roomMembers(students, roomId) {
+  return students.filter((s) => s.assigned_room_id === roomId)
+}
+
+function sleepConflict(members) {
+  const snorers = members.filter((m) => m.snore).length
+  const light = members.filter((m) => m.sleep_quality === '差').length
+  return snorers > 0 && light > 0
+}
+
+function StudentChip({ s, onDragStart }) {
+  return (
+    <div
+      className="stu-chip"
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/student-id', String(s.id))
+        e.dataTransfer.effectAllowed = 'move'
+      }}
+    >
+      <span className="stu-name">{s.name}</span>
+      <span className="stu-meta">
+        {s.teacher}·{s.class_level}·想{s.room_pref}人间
+        {s.snore ? '·打呼' : ''}
+        {s.sleep_quality === '差' ? '·睡眠差' : ''}
+      </span>
+    </div>
+  )
+}
+
+export default function Workbench() {
+  const [students, setStudents] = useState([])
+  const [rooms, setRooms] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [alert, setAlert] = useState('') // 红色警告(违反红线/超员/操作失败)
+  const [busy, setBusy] = useState('') // 正在分房… / 保存中…
+  const [dropTarget, setDropTarget] = useState(null) // {roomId|null, ok:bool}
+  const [newRoom, setNewRoom] = useState({ room_no: '', capacity: '' })
+  const [addingRoom, setAddingRoom] = useState(false)
+  const [editingRoomId, setEditingRoomId] = useState(null)
+  const [editDraft, setEditDraft] = useState({})
+
+  async function load() {
+    try {
+      const { students, rooms } = await loadWorkbenchData()
+      setStudents(students)
+      setRooms(rooms)
+    } catch (err) {
+      setAlert(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  const unassigned = useMemo(
+    () => students.filter((s) => !s.assigned_room_id),
+    [students],
+  )
+  const unassignedByGender = useMemo(
+    () => ({
+      男: unassigned.filter((s) => s.gender === '男'),
+      女: unassigned.filter((s) => s.gender === '女'),
+    }),
+    [unassigned],
+  )
+  const stats = {
+    total: students.length,
+    assigned: students.length - unassigned.length,
+    unassigned: unassigned.length,
+  }
+
+  function flash(msg) {
+    setAlert(msg)
+    window.clearTimeout(flash._t)
+    flash._t = window.setTimeout(() => setAlert(''), 4000)
+  }
+
+  // ===== AI 分房 =====
+  async function runAI({ clearAll }) {
+    const pool = clearAll
+      ? students
+      : unassigned // 一键分房:只分未分配的;重新分房:全部推倒重算
+    if (pool.length === 0) {
+      flash(clearAll ? '没有学生数据,先等学生提交' : '没有未分配的学生')
+      return
+    }
+    setBusy(clearAll ? '正在重新分房…' : '正在分房…')
+    try {
+      if (clearAll) {
+        // 全部推倒:先清空所有人的分配
+        await applyAssignments([], students.map((s) => s.id))
+      }
+      const { assignments, unassigned: failed } = runAssignment(pool, rooms)
+      const clearIds = clearAll ? students.map((s) => s.id) : unassigned.map((s) => s.id)
+      await applyAssignments(assignments, clearIds)
+      await saveHistorySnapshot({ assignments, unassigned: failed, at: new Date().toISOString() })
+      await load()
+      setBusy('')
+      if (failed.length > 0) {
+        flash(`AI 分房完成:${assignments.length} 人已分配,${failed.length} 人分不进(${failed.map((f) => f.name).join('、')})`)
+      }
+    } catch (err) {
+      setBusy('')
+      flash(err.message)
+    }
+  }
+
+  // ===== 恢复最近一次 AI 方案 =====
+  async function restoreAI() {
+    try {
+      setBusy('正在恢复 AI 方案…')
+      const snap = await latestAiSnapshot()
+      if (!snap) {
+        setBusy('')
+        flash('还没有 AI 分房记录可恢复')
+        return
+      }
+      const stillHere = students.filter((s) =>
+        snap.snapshot.assignments.some((a) => a.student_id === s.id),
+      )
+      await applyAssignments(
+        snap.snapshot.assignments.filter((a) => stillHere.some((s) => s.id === a.student_id)),
+        students.map((s) => s.id),
+      )
+      await load()
+      setBusy('')
+    } catch (err) {
+      setBusy('')
+      flash(err.message)
+    }
+  }
+
+  // ===== 拖拽 =====
+  function dragOver(e, roomId) {
+    e.preventDefault()
+    if (dropTarget?.roomId === roomId) return
+    const sid = Number(e.dataTransfer.getData('text/student-id') || e.dataTransfer.getData('text/plain'))
+    const s = students.find((x) => x.id === sid)
+    const room = rooms.find((r) => r.id === roomId)
+    const ok =
+      s && room ? !checkMove(s, room, roomMembers(students, roomId)) : false
+    setDropTarget({ roomId, ok })
+  }
+  function dragLeaveRoom(roomId) {
+    if (dropTarget?.roomId === roomId) setDropTarget(null)
+  }
+  async function dropToRoom(e, roomId) {
+    e.preventDefault()
+    setDropTarget(null)
+    const sid = Number(e.dataTransfer.getData('text/student-id'))
+    const s = students.find((x) => x.id === sid)
+    const room = rooms.find((r) => r.id === roomId)
+    if (!s || !room) return
+    const problem = checkMove(s, room, roomMembers(students, roomId))
+    if (problem) {
+      flash(`分配不生效:${problem}。请换房间或先调整房间容量。`)
+      return
+    }
+    try {
+      await setStudentRoom(s.id, roomId)
+      await load()
+    } catch (err) {
+      flash(err.message)
+    }
+  }
+  async function dropToUnassigned(e) {
+    e.preventDefault()
+    setDropTarget(null)
+    const sid = Number(e.dataTransfer.getData('text/student-id'))
+    const s = students.find((x) => x.id === sid)
+    if (!s || !s.assigned_room_id) return
+    try {
+      await setStudentRoom(s.id, null)
+      await load()
+    } catch (err) {
+      flash(err.message)
+    }
+  }
+
+  // ===== 房间管理 =====
+  async function handleAddRoom(e) {
+    e.preventDefault()
+    const roomNo = newRoom.room_no.trim()
+    const cap = Number(newRoom.capacity)
+    if (!roomNo || !cap || cap < 1) {
+      flash('房号和可住人数都要填(人数至少 1)')
+      return
+    }
+    try {
+      setBusy('保存中…')
+      await addRoom(roomNo, cap)
+      setNewRoom({ room_no: '', capacity: '' })
+      setAddingRoom(false)
+      await load()
+      setBusy('')
+    } catch (err) {
+      setBusy('')
+      flash(err.message.includes('duplicate') ? `房号 ${roomNo} 已经有了` : err.message)
+    }
+  }
+
+  async function handleDeleteRoom(room) {
+    const members = roomMembers(students, room.id)
+    const ok = window.confirm(
+      `确定删除 ${room.room_no} 房?` +
+        (members.length ? `里面的 ${members.length} 人会回到未分配名单。` : ''),
+    )
+    if (!ok) return
+    try {
+      setBusy('删除中…')
+      await unassignStudentsOfRoom(room.id)
+      await deleteRoom(room.id)
+      await load()
+      setBusy('')
+    } catch (err) {
+      setBusy('')
+      flash(err.message)
+    }
+  }
+
+  function startEditRoom(room) {
+    setEditingRoomId(room.id)
+    setEditDraft({ room_no: room.room_no, capacity: String(room.capacity) })
+  }
+  async function saveEditRoom(room) {
+    const roomNo = editDraft.room_no.trim()
+    const cap = Number(editDraft.capacity)
+    const members = roomMembers(students, room.id)
+    if (!roomNo || !cap || cap < 1) {
+      flash('房号和人数都要填好')
+      return
+    }
+    if (cap < members.length) {
+      flash(`容量不能小于已住人数(${members.length} 人)`)
+      return
+    }
+    try {
+      setBusy('保存中…')
+      await updateRoom(room.id, { room_no: roomNo, capacity: cap })
+      setEditingRoomId(null)
+      await load()
+      setBusy('')
+    } catch (err) {
+      setBusy('')
+      flash(err.message)
+    }
+  }
+
+  async function moveBack(student) {
+    try {
+      await setStudentRoom(student.id, null)
+      await load()
+    } catch (err) {
+      flash(err.message)
+    }
+  }
+
+  if (loading) return <section className="page"><p className="placeholder-note">加载中…</p></section>
+
+  return (
+    <section className="page wb-page">
+      <header className="wb-head">
+        <h1>分房工作台</h1>
+        <div className="wb-stats">
+          学生 {stats.total} 人 · 已分配 {stats.assigned} 人
+          {stats.unassigned > 0 && (
+            <span className="wb-stats-warn">· 未分配 {stats.unassigned} 人</span>
+          )}
+        </div>
+        <div className="wb-actions">
+          <button className="btn-primary wb-btn" onClick={() => runAI({ clearAll: false })} disabled={!!busy}>
+            一键 AI 分房
+          </button>
+          <button className="btn-plain" onClick={() => {
+            if (window.confirm('将清空当前分配,用新方案替换。确定重新分房?')) runAI({ clearAll: true })
+          }} disabled={!!busy}>
+            重新分房
+          </button>
+          <button className="btn-plain" onClick={restoreAI} disabled={!!busy}>
+            恢复 AI 方案
+          </button>
+        </div>
+      </header>
+
+      {busy && <div className="wb-busy">{busy}</div>}
+      {alert && (
+        <div className="form-alert" role="alert">
+          {alert}
+        </div>
+      )}
+
+      {stats.total === 0 && (
+        <div className="wb-empty">
+          还没有学生提交,把填写链接发到群里吧。左侧「填写页」顶部可以先体验提交。
+        </div>
+      )}
+
+      <div className="wb-cols">
+        {/* ===== 左栏:未分配学生 ===== */}
+        <aside
+          className={`wb-left ${dropTarget?.roomId === null ? (dropTarget.ok ? 'drop-ok' : 'drop-bad') : ''}`}
+          onDragOver={(e) => dragOver(e, null)}
+          onDragLeave={() => dragLeaveRoom(null)}
+          onDrop={dropToUnassigned}
+        >
+          <h2 className="wb-sub">未分配学生</h2>
+          {['男', '女'].map((g) => (
+            <div className="wb-gender-group" key={g}>
+              <div className="wb-gender-title">
+                {g}生 <span className="wb-count">{unassignedByGender[g].length} 人</span>
+              </div>
+              {unassignedByGender[g].length === 0 && (
+                <p className="wb-none">暂无</p>
+              )}
+              {unassignedByGender[g].map((s) => (
+                <StudentChip key={s.id} s={s} />
+              ))}
+            </div>
+          ))}
+          <p className="wb-hint">把学生拖到右边房间即可分配;拖回这里则移出房间。</p>
+        </aside>
+
+        {/* ===== 右栏:房间卡片 ===== */}
+        <div className="wb-right">
+          <div className="wb-right-head">
+            <h2 className="wb-sub">房间({rooms.length})</h2>
+            <button className="btn-plain" onClick={() => setAddingRoom((v) => !v)}>
+              {addingRoom ? '收起' : '+ 添加房间'}
+            </button>
+          </div>
+
+          {addingRoom && (
+            <form className="room-add" onSubmit={handleAddRoom}>
+              <input
+                className="q-input room-add-input"
+                placeholder="房号,如 305"
+                value={newRoom.room_no}
+                onChange={(e) => setNewRoom((r) => ({ ...r, room_no: e.target.value }))}
+                maxLength={20}
+              />
+              <input
+                className="q-input room-add-input"
+                type="number"
+                min="1"
+                max="10"
+                placeholder="可住人数"
+                value={newRoom.capacity}
+                onChange={(e) => setNewRoom((r) => ({ ...r, capacity: e.target.value }))}
+              />
+              <button className="btn-primary room-add-btn" type="submit">
+                添加
+              </button>
+            </form>
+          )}
+
+          {rooms.length === 0 && (
+            <div className="wb-empty">还没有房间。点右上「+ 添加房间」,按酒店给的房号和床位数录入。</div>
+          )}
+
+          <div className="room-list">
+            {rooms.map((room) => {
+              const members = roomMembers(students, room.id)
+              const conflict = sleepConflict(members)
+              const dropCls =
+                dropTarget?.roomId === room.id ? (dropTarget.ok ? 'drop-ok' : 'drop-bad') : ''
+              return (
+                <div
+                  key={room.id}
+                  className={`room-card ${dropCls} ${conflict ? 'room-conflict' : ''}`}
+                  onDragOver={(e) => dragOver(e, room.id)}
+                  onDragLeave={() => dragLeaveRoom(room.id)}
+                  onDrop={(e) => dropToRoom(e, room.id)}
+                >
+                  <div className="room-head">
+                    {editingRoomId === room.id ? (
+                      <div className="room-edit">
+                        <input
+                          className="q-input room-edit-input"
+                          value={editDraft.room_no}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, room_no: e.target.value }))}
+                        />
+                        <input
+                          className="q-input room-edit-input"
+                          type="number"
+                          min="1"
+                          value={editDraft.capacity}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, capacity: e.target.value }))}
+                        />
+                        <button className="btn-plain" onClick={() => saveEditRoom(room)}>保存</button>
+                        <button className="btn-plain" onClick={() => setEditingRoomId(null)}>取消</button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="room-no">{room.room_no}</span>
+                        <span className="room-cap">
+                          已住 {members.length}/{room.capacity}
+                          {room.gender_label && ` · ${room.gender_label}生房`}
+                        </span>
+                        <span className="room-tools">
+                          <button className="btn-mini" onClick={() => startEditRoom(room)}>编辑</button>
+                          <button className="btn-mini btn-mini-danger" onClick={() => handleDeleteRoom(room)}>删除</button>
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {conflict && (
+                    <div className="room-warning">
+                      ⚠ 睡眠冲突:同房既有打呼噜的,又有睡眠质量差的
+                    </div>
+                  )}
+
+                  {members.length === 0 ? (
+                    <p className="room-empty-hint">空房,拖学生进来</p>
+                  ) : (
+                    <div className="room-members">
+                      {members.map((m) => (
+                        <div key={m.id} className="stu-chip stu-chip-inroom" draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('text/student-id', String(m.id))
+                            e.dataTransfer.effectAllowed = 'move'
+                          }}>
+                          <span className="stu-name">{m.name}</span>
+                          <span className="stu-meta">
+                            {m.teacher}·{m.class_level}·{m.check_in_date} 到
+                            {m.snore ? '·打呼' : ''}
+                            {m.sleep_quality === '差' ? '·睡眠差' : ''}
+                          </span>
+                          <button
+                            className="btn-mini"
+                            title="移回未分配"
+                            onClick={() => moveBack(m)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

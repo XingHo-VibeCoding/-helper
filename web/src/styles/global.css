@@ -1,0 +1,734 @@
+/* xinghe-helper 全局样式：中性配色，颜色只留给约束警告（红/黄），不做装饰用色 */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #1f1f1f;
+  background: #ffffff;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.app-nav {
+  display: flex;
+  gap: 16px;
+}
+
+.app-nav a {
+  color: #555555;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.app-nav a.active {
+  color: #1f1f1f;
+  background: #f0f0f0;
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.page h1 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.placeholder-note {
+  color: #666666;
+  max-width: 560px;
+}
+
+/* ===== F1 学生填写页(移动优先:窄屏单列,大按钮少输入)===== */
+
+.form-page {
+  max-width: 560px;
+}
+
+.form-head {
+  margin-bottom: 20px;
+}
+
+.form-org {
+  font-size: 13px;
+  color: #888888;
+  letter-spacing: 0.06em;
+}
+
+.form-lead {
+  color: #555555;
+  font-size: 14px;
+}
+
+.q {
+  padding: 14px 0;
+  border-bottom: 1px solid #efefef;
+  border-left: 3px solid transparent;
+  padding-left: 12px;
+  margin-left: -15px;
+  transition: border-color 0.15s;
+}
+
+/* 已填过的项给"完成"反馈(PRD:每项填完即有视觉反馈) */
+.q-done .q-title {
+  color: #1f1f1f;
+}
+
+.q-check {
+  color: #2e7d32;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.q-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.q-required {
+  color: #c62828;
+}
+
+.q-optional {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999999;
+}
+
+.q-hint {
+  font-size: 12px;
+  color: #999999;
+  margin: 4px 0 0;
+}
+
+.q-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 10px 18px;
+  font-size: 15px;
+  border: 1px solid #cccccc;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #333333;
+  cursor: pointer;
+  min-height: 44px; /* 手指可点的最小尺寸 */
+}
+
+.chip-on {
+  border-color: #1f1f1f;
+  background: #1f1f1f;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.q-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 16px;
+  border: 1px solid #cccccc;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1f1f1f;
+  font-family: inherit;
+}
+
+.q-input:focus {
+  outline: 2px solid #1f1f1f;
+  outline-offset: 1px;
+}
+
+textarea.q-input {
+  resize: vertical;
+}
+
+/* 漏填提示:左侧红条 + 题目红字(红色只用于约束/错误,不做装饰) */
+.q-missing {
+  border-left-color: #c62828;
+}
+
+.q-missing .q-title {
+  color: #c62828;
+}
+
+.form-alert {
+  background: #fdecea;
+  border: 1px solid #e57373;
+  color: #b71c1c;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.btn-primary {
+  width: 100%;
+  min-height: 52px;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  background: #1f1f1f;
+  color: #ffffff;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-submit {
+  margin-bottom: 8px;
+}
+
+/* 确认页 */
+.done-card {
+  text-align: center;
+  padding: 40px 8px;
+}
+
+.done-icon {
+  width: 64px;
+  height: 64px;
+  line-height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.done-card h1 {
+  margin-bottom: 10px;
+}
+
+.done-card p {
+  color: #555555;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.done-sub {
+  font-size: 13px;
+  color: #999999 !important;
+  margin-top: 8px !important;
+}
+
+.done-card .btn-primary {
+  max-width: 280px;
+}
+
+/* ===== F2 分房工作台(桌面优先:左右分栏;红色只给红线/超员,黄色只给睡眠冲突)===== */
+
+.wb-page {
+  max-width: 1100px;
+}
+
+.wb-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.wb-head h1 {
+  margin-bottom: 0;
+}
+
+.wb-stats {
+  font-size: 14px;
+  color: #555555;
+}
+
+.wb-stats-warn {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.wb-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.wb-btn {
+  width: auto;
+  min-height: 40px;
+  padding: 0 18px;
+  margin-top: 0;
+  font-size: 14px;
+}
+
+.btn-plain {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+  border: 1px solid #cccccc;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #333333;
+  cursor: pointer;
+}
+
+.btn-plain:hover {
+  border-color: #1f1f1f;
+}
+
+.btn-mini {
+  padding: 2px 8px;
+  font-size: 12px;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #555555;
+  cursor: pointer;
+}
+
+.btn-mini-danger:hover {
+  border-color: #c62828;
+  color: #c62828;
+}
+
+.wb-busy {
+  font-size: 14px;
+  color: #555555;
+  margin-bottom: 8px;
+}
+
+.wb-empty {
+  border: 1px dashed #cccccc;
+  border-radius: 12px;
+  padding: 24px;
+  color: #666666;
+  font-size: 14px;
+  text-align: center;
+}
+
+.wb-cols {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.wb-left {
+  flex: 0 0 280px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 14px;
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+}
+
+.wb-left.drop-ok,
+.room-card.drop-ok {
+  outline: 2px dashed #1f1f1f;
+  outline-offset: 2px;
+  background: #f7f7f7;
+}
+
+.wb-left.drop-bad,
+.room-card.drop-bad {
+  outline: 2px dashed #c62828;
+  outline-offset: 2px;
+  background: #fdf3f2;
+}
+
+.wb-sub {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.wb-gender-group {
+  margin-bottom: 12px;
+}
+
+.wb-gender-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444444;
+  margin-bottom: 6px;
+}
+
+.wb-count {
+  font-weight: 400;
+  color: #888888;
+}
+
+.wb-none {
+  font-size: 13px;
+  color: #aaaaaa;
+  padding: 2px 0;
+}
+
+.wb-hint {
+  font-size: 12px;
+  color: #999999;
+  border-top: 1px solid #efefef;
+  padding-top: 8px;
+}
+
+.stu-chip {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: #ffffff;
+  cursor: grab;
+}
+
+.stu-chip:active {
+  cursor: grabbing;
+}
+
+.stu-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-right: 6px;
+}
+
+.stu-meta {
+  font-size: 12px;
+  color: #777777;
+}
+
+.wb-right {
+  flex: 1;
+  min-width: 0;
+}
+
+.wb-right-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.room-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.room-add-input {
+  flex: 1;
+}
+
+.room-add-btn {
+  width: auto;
+  padding: 0 22px;
+  margin-top: 0;
+  font-size: 14px;
+  min-height: 44px;
+}
+
+.room-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.room-card {
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.room-conflict {
+  border-color: #f0c33c; /* 黄:睡眠冲突提示,非装饰用色 */
+}
+
+.room-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.room-no {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.room-cap {
+  font-size: 13px;
+  color: #666666;
+}
+
+.room-tools {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.room-edit {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.room-edit-input {
+  width: 90px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.room-warning {
+  background: #fdf6e3;
+  border: 1px solid #f0c33c;
+  color: #8a6d1a;
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.room-members {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stu-chip-inroom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0;
+}
+
+.stu-chip-inroom .stu-meta {
+  flex: 1;
+}
+
+.room-empty-hint {
+  font-size: 13px;
+  color: #aaaaaa;
+  padding: 8px 0;
+}
+
+/* 窄屏退化为单列 */
+@media (max-width: 760px) {
+  .wb-cols {
+    flex-direction: column;
+  }
+  .wb-left {
+    position: static;
+    max-height: none;
+    width: 100%;
+    flex: none;
+  }
+  .wb-actions {
+    margin-left: 0;
+  }
+}
+
+/* ===== F3 名单总览(打印友好为第一目标:表格清晰、无花哨样式)===== */
+
+.ov-page {
+  max-width: 900px;
+}
+
+.ov-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ov-head h1 {
+  margin-bottom: 0;
+}
+
+.ov-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+  align-items: center;
+}
+
+.ov-view-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.toggle-on {
+  background: #1f1f1f;
+  color: #ffffff;
+  border-color: #1f1f1f;
+}
+
+.ov-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.ov-link {
+  background: #f5f5f5;
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.roster-block {
+  margin-bottom: 22px;
+  break-inside: avoid;
+}
+
+.roster-title {
+  font-size: 16px;
+  font-weight: 700;
+  border-bottom: 2px solid #1f1f1f;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.roster-cap {
+  font-size: 13px;
+  font-weight: 400;
+  color: #666666;
+  margin-left: 8px;
+}
+
+.roster-class {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444444;
+  margin: 10px 0 6px;
+}
+
+.roster-none {
+  font-size: 13px;
+  color: #aaaaaa;
+}
+
+.roster-unassigned .roster-title {
+  border-bottom-color: #c62828;
+  color: #c62828;
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.roster-table th,
+.roster-table td {
+  border: 1px solid #cccccc;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.roster-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+.td-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.td-flags {
+  white-space: nowrap;
+}
+
+.td-note {
+  max-width: 200px;
+}
+
+.ov-print-foot {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #666666;
+  border-top: 1px solid #dddddd;
+  padding-top: 8px;
+}
+
+/* 打印抬头,屏幕上不显示 */
+.ov-print-head {
+  display: none;
+}
+
+/* ===== 打印样式:只印名单本体,去掉导航/按钮/统计操作区 ===== */
+@media print {
+  .app-header,
+  .no-print,
+  .ov-print-foot,
+  .roster-unassigned {
+    display: none !important;
+  }
+  .app-main {
+    padding: 0;
+    max-width: none;
+  }
+  .ov-page {
+    max-width: none;
+  }
+  .ov-print-head {
+    display: block;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .ov-print-head h1 {
+    font-size: 20px;
+  }
+  .ov-print-head p {
+    font-size: 12px;
+    color: #555555;
+  }
+  .roster-table {
+    font-size: 12px;
+  }
+}
