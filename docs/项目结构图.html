@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>xinghe-helper 项目结构图 · Day 7</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #ffffff;
+    color: #1f1f1f;
+    padding: 40px 24px;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 22px; text-align: center; margin-bottom: 6px; }
+  .sub { text-align: center; color: #888888; font-size: 13px; margin-bottom: 28px; }
+  .layer {
+    border: 1px solid #d9d9d9; border-radius: 12px;
+    background: #f7f7f7; padding: 16px 20px; margin-bottom: 16px;
+  }
+  .layer-title { font-size: 14px; font-weight: 700; color: #555555; margin-bottom: 8px; }
+  .layer-files { font-size: 13px; color: #333333; }
+  .layer-note { font-size: 12px; color: #888888; margin-top: 4px; }
+  .pages { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+  .page-card {
+    flex: 1 1 240px; background: #ffffff; border: 1px solid #cccccc;
+    border-radius: 10px; padding: 12px 14px;
+  }
+  .page-card b { font-size: 13px; display: block; }
+  .page-card code { font-size: 12px; color: #555555; background: #f0f0f0; padding: 1px 6px; border-radius: 4px; }
+  .page-card p { font-size: 12px; color: #666666; margin-top: 4px; }
+  .tag { display: inline-block; font-size: 11px; border: 1px solid #bbbbbb; border-radius: 999px; padding: 0 8px; color: #777777; margin-left: 6px; }
+  .arrow-row { text-align: center; color: #aaaaaa; font-size: 18px; margin: -6px 0 10px; }
+  .foot { text-align: center; font-size: 12px; color: #999999; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>xinghe-helper 项目结构图</h1>
+  <div class="sub">口语拉练营住宿分房工具 · 学生扫码填表 → AI 自动分房 → 一键导出名单 · Day 7 MVP</div>
+
+  <div class="layer">
+    <div class="layer-title">① 文档层 <span class="tag">Day 0~4</span></div>
+    <div class="layer-files">AGENTS.md(协作规则)· PRD.md v1.2 · TECH_DESIGN.md v1.1 · research.md · <b>运行说明.md(Day 7,新增)</b></div>
+  </div>
+  <div class="arrow-row">▼</div>
+
+  <div class="layer">
+    <div class="layer-title">② shared/ 分房引擎 <span class="tag">Day 7</span></div>
+    <div class="layer-files">assignEngine.js —— 纯函数,已通过 Node 断言测试</div>
+    <div class="layer-note">规则优先级:【红线】男女不混住 → 睡眠相容(打呼×睡眠差互斥) → 同老师同班优先 → 拼房意愿(1~6 人间);分不进的留"未分配"并标注原因</div>
+  </div>
+  <div class="arrow-row">▼</div>
+
+  <div class="layer">
+    <div class="layer-title">③ web/src/pages/ 三个页面 <span class="tag">Day 7 · React 18 + Vite 5 + react-router 6</span></div>
+    <div class="pages">
+      <div class="page-card">
+        <b>StudentForm.jsx</b> <code>/form</code>
+        <p>学生填写页(移动优先):必填 6 项 + 选填 3 项,口语化题目,漏填高亮;重复提交自动失效旧记录,确认页提示"已更新"</p>
+      </div>
+      <div class="page-card">
+        <b>Workbench.jsx</b> <code>/workbench</code>
+        <p>分房工作台(桌面优先):左栏未分配按性别分组,右栏房间卡片;一键 AI 分房 / 拖拽即时调整 / 重新分房 / 恢复 AI 方案;红色=红线·超员,黄色=睡眠冲突</p>
+      </div>
+      <div class="page-card">
+        <b>Overview.jsx</b> <code>/overview</code>
+        <p>名单总览(打印友好):按房间 / 按老师→班级两种视图;导出默认按老师→班级排序,未分配时导出有提醒;打印自动去掉导航按钮</p>
+      </div>
+    </div>
+  </div>
+  <div class="arrow-row">▼</div>
+
+  <div class="layer">
+    <div class="layer-title">④ web/src/api/ 数据层 <span class="tag">Day 7</span></div>
+    <div class="layer-files">client.js(Supabase 连接,.env 缺失时不白屏)· students.js(提交与同名去重)· rooms.js(房间增删改、分配落库、AI 历史快照)</div>
+  </div>
+  <div class="arrow-row">▼</div>
+
+  <div class="layer">
+    <div class="layer-title">⑤ supabase/migrations/ 云数据库 <span class="tag">Day 7 · 已在云端建好</span></div>
+    <div class="layer-files">0001_schema.sql:4 张表(camps / rooms / students / assignment_history)+ 种子营期 · 0002_policies.sql:RLS 匿名读写策略(学生表不给删除,留痕不物理删除)</div>
+    <div class="layer-note">数据住云端 7×24 在线——电脑关机、WorkBuddy 关掉,学生照常填表</div>
+  </div>
+
+  <div class="foot">本地运行:cd web &amp;&amp; npm install &amp;&amp; npm run dev → http://localhost:5173 · 提交 fea2ab7 · 2026-09-22</div>
+</div>
+</body>
+</html>
