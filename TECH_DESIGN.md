@@ -1,4 +1,4 @@
-# 「星禾小助手」技术设计文档（TECH_DESIGN）
+# xinghe-helper 技术设计文档（TECH_DESIGN）
 
 > 版本：v1.1（MVP）｜更新日期：2026-09-21
 > 配套文档：《PRD.md》v1.2、《research.md》
@@ -62,7 +62,7 @@
 ## 二、项目结构（方案 B）
 
 ```
-星禾小助手/
+xinghe-helper/
 ├── web/                          # 前端（React + Vite）
 │   ├── index.html
 │   ├── package.json
