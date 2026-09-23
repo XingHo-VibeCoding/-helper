@@ -1,8 +1,13 @@
 // F2 分房工作台的数据层:房间 CRUD、分配落库、AI 历史快照
-import { supabase } from './client.js'
+// Day 8|mock:开关打开(VITE_USE_MOCK=true)或没配 .env 时,读取自动走本地假数据
+import { supabase, useMockData } from './client.js'
+import { fetchMockData } from './mockData.js'
 
 export async function loadWorkbenchData() {
-  if (!supabase) throw new Error('数据库未连接:web/.env 缺失或 dev server 需重启')
+  if (useMockData) {
+    const { students, rooms } = await fetchMockData()
+    return { students, rooms, isMock: true }
+  }
   const [studentsRes, roomsRes] = await Promise.all([
     supabase
       .from('students')
@@ -17,7 +22,13 @@ export async function loadWorkbenchData() {
   return { students: studentsRes.data, rooms: roomsRes.data }
 }
 
+// 写操作的 mock 防御:演示模式下明确说"不可用",不白屏不假成功
+function noWrite() {
+  if (useMockData) throw new Error('现在是演示数据模式(mock),保存类操作第 3 周接入真实 API 后开放')
+}
+
 export async function addRoom(roomNo, capacity) {
+  noWrite()
   const { error } = await supabase
     .from('rooms')
     .insert({ camp_id: 1, room_no: roomNo, capacity })
@@ -25,12 +36,14 @@ export async function addRoom(roomNo, capacity) {
 }
 
 export async function updateRoom(roomId, patch) {
+  noWrite()
   const { error } = await supabase.from('rooms').update(patch).eq('id', roomId)
   if (error) throw new Error('改房间失败:' + error.message)
 }
 
 // 删房间:先把里面的成员放回未分配,再删房(成员的落库动作由调用方在删之前完成)
 export async function unassignStudentsOfRoom(roomId) {
+  noWrite()
   const { error } = await supabase
     .from('students')
     .update({ assigned_room_id: null, assign_status: '未分配' })
@@ -39,12 +52,14 @@ export async function unassignStudentsOfRoom(roomId) {
 }
 
 export async function deleteRoom(roomId) {
+  noWrite()
   const { error } = await supabase.from('rooms').delete().eq('id', roomId)
   if (error) throw new Error('删房间失败:' + error.message)
 }
 
 // 单个学生的分配/取消分配(手动拖拽即时保存)
 export async function setStudentRoom(studentId, roomId) {
+  noWrite()
   const { error } = await supabase
     .from('students')
     .update({
@@ -58,6 +73,7 @@ export async function setStudentRoom(studentId, roomId) {
 // 批量应用分配方案(AI 分房 / 恢复快照共用):先清空再写入
 // assignments: [{student_id, room_id}];onlyStudents 限定生效范围(一键分房=只分未分配的)
 export async function applyAssignments(assignments, clearStudentIds) {
+  noWrite()
   if (clearStudentIds?.length) {
     // 按行更新以精确控制;几十人规模逐条更新完全够用
     for (const id of clearStudentIds) {
@@ -82,6 +98,7 @@ export async function applyAssignments(assignments, clearStudentIds) {
 
 // 保存 AI 方案快照(供"恢复 AI 方案"用)
 export async function saveHistorySnapshot(snapshot) {
+  noWrite()
   const { error } = await supabase
     .from('assignment_history')
     .insert({ camp_id: 1, run_type: 'ai', snapshot })
@@ -90,6 +107,7 @@ export async function saveHistorySnapshot(snapshot) {
 
 // 取最近一次 AI 快照
 export async function latestAiSnapshot() {
+  noWrite()
   const { data, error } = await supabase
     .from('assignment_history')
     .select('snapshot, created_at')

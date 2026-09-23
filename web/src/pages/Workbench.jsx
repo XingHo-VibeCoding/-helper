@@ -53,6 +53,7 @@ function StudentChip({ s, onDragStart }) {
 export default function Workbench() {
   const [students, setStudents] = useState([])
   const [rooms, setRooms] = useState([])
+  const [isMock, setIsMock] = useState(false)
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState('') // 红色警告(违反红线/超员/操作失败)
   const [busy, setBusy] = useState('') // 正在分房… / 保存中…
@@ -64,9 +65,10 @@ export default function Workbench() {
 
   async function load() {
     try {
-      const { students, rooms } = await loadWorkbenchData()
+      const { students, rooms, isMock } = await loadWorkbenchData()
       setStudents(students)
       setRooms(rooms)
+      setIsMock(!!isMock)
     } catch (err) {
       setAlert(err.message)
     } finally {
@@ -287,6 +289,7 @@ export default function Workbench() {
     <section className="page wb-page">
       <header className="wb-head">
         <h1>分房工作台</h1>
+        {isMock && <span className="mock-tag">演示数据(未接数据库)</span>}
         <div className="wb-stats">
           学生 {stats.total} 人 · 已分配 {stats.assigned} 人
           {stats.unassigned > 0 && (

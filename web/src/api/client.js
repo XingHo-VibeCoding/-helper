@@ -13,3 +13,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null
+
+// Day 8|mock 开关:.env 里 VITE_USE_MOCK=true(或没配数据库)时,页面一律用本地假数据
+export const useMockData = !supabase || import.meta.env.VITE_USE_MOCK === 'true'
