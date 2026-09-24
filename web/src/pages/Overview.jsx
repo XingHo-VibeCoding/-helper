@@ -11,34 +11,37 @@ function flags(s) {
 
 function MemberTable({ students, showRoom }) {
   return (
-    <table className="roster-table">
-      <thead>
-        <tr>
-          <th>姓名</th>
-          <th>性别</th>
-          <th>带班老师</th>
-          <th>班级</th>
-          <th>入住日期</th>
-          <th>标记</th>
-          {showRoom && <th>房间</th>}
-          <th>备注</th>
-        </tr>
-      </thead>
-      <tbody>
-        {students.map((s) => (
-          <tr key={s.id}>
-            <td className="td-name">{s.name}</td>
-            <td>{s.gender}</td>
-            <td>{s.teacher}</td>
-            <td>{s.class_level}</td>
-            <td>{s.check_in_date}</td>
-            <td className="td-flags">{flags(s) || '—'}</td>
-            {showRoom && <td>{s.room_no ?? '未分配'}</td>}
-            <td className="td-note">{s.note || '—'}</td>
+    // 8 列表格在窄屏必然超宽,外面套一层横向滚动容器,页面本身不被撑破
+    <div className="roster-scroll">
+      <table className="roster-table">
+        <thead>
+          <tr>
+            <th>姓名</th>
+            <th>性别</th>
+            <th>带班老师</th>
+            <th>班级</th>
+            <th>入住日期</th>
+            <th>标记</th>
+            {showRoom && <th>房间</th>}
+            <th>备注</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {students.map((s) => (
+            <tr key={s.id}>
+              <td className="td-name">{s.name}</td>
+              <td>{s.gender}</td>
+              <td>{s.teacher}</td>
+              <td>{s.class_level}</td>
+              <td>{s.check_in_date}</td>
+              <td className="td-flags">{flags(s) || '—'}</td>
+              {showRoom && <td>{s.room_no ?? '未分配'}</td>}
+              <td className="td-note">{s.note || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 

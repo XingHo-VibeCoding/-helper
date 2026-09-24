@@ -42,7 +42,8 @@ function toRow(f) {
 }
 
 // 单选按钮组:大按钮、口语化,选中即"填过";missing=true 时整块高亮提示漏填
-function Choice({ question, options, value, onChange, optional = false, missing = false }) {
+// hint 必须渲染在 .q 内部,否则会脱离题目的缩进,与同组题目错位
+function Choice({ question, options, value, onChange, optional = false, missing = false, hint }) {
   return (
     <div className={`q ${value ? 'q-done' : ''} ${missing ? 'q-missing' : ''}`}>
       <div className="q-title">
@@ -62,6 +63,7 @@ function Choice({ question, options, value, onChange, optional = false, missing 
           </button>
         ))}
       </div>
+      {hint && <p className="q-hint">{hint}</p>}
     </div>
   )
 }
@@ -216,8 +218,8 @@ export default function StudentForm() {
           value={form.roomPref}
           onChange={set('roomPref')}
           missing={missing.includes('roomPref')}
+          hint="人数越多,人均房费越便宜;只记录意愿,具体由组织者安排。"
         />
-        <p className="q-hint">人数越多,人均房费越便宜;只记录意愿,具体由组织者安排。</p>
 
         <Choice
           question="你打呼噜吗?"

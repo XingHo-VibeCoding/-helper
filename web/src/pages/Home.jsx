@@ -8,7 +8,7 @@ const ENTRIES = [
     to: '/form',
     title: '学生填写页',
     desc: '学生扫码/点链接后看到的就是这一页。想看学生视角可以点进去看看。',
-    action: '预览',
+    action: '预览 →',
   },
   {
     to: '/workbench',
