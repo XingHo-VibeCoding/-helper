@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import OceanScene from './components/OceanScene.jsx'
 
 // 组织者页面路径:导航只在这些页面显示
 // 学生能接触到的只有 /form(根网址/输错网址都会跳过去),导航对学生完全隐藏
@@ -10,6 +11,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <OceanScene />
       <header className="app-header">
         <span className="brand">xinghe-helper</span>
         {isOrganizer && (

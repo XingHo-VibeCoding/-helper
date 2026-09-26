@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
 import FormQrCode from '../components/FormQrCode.jsx'
+import Fish from '../components/Fish.jsx'
+import logo from '../assets/logo.png'
 
-// 组织者入口页(/home):只有你自己通过书签/输网址进来,不出现在学生可见的任何地方
+// 组织者入口页(/):只有你自己通过书签/输网址进来,不出现在学生可见的任何地方
 // 学生能接触到的只有 /form;这页放二维码生成器和三个入口,是组织者的"工作台面"
+// 视觉主题:海洋科幻风(用户要求),装饰层纯 CSS/SVG,不携带任何信息,加 aria-hidden
 const ENTRIES = [
   {
     to: '/form',
@@ -24,10 +27,29 @@ const ENTRIES = [
   },
 ]
 
+// 简笔小鱼已抽成共享组件 components/Fish.jsx,这里直接引用
+
 export default function Home() {
   return (
-    <section className="page home-page">
+    <section className="page home-page ocean">
+      {/* 装饰层:游鱼与气泡,纯装饰 */}
+      <div className="ocean-scene" aria-hidden="true">
+        <span className="ray ray-1" />
+        <span className="ray ray-2" />
+        <Fish className="fish fish-1" color="#3fd0e8" />
+        <Fish className="fish fish-2" color="#6ea8ff" />
+        <Fish className="fish fish-3" color="#48e5c2" />
+        <Fish className="fish fish-4" color="#3fd0e8" />
+        <span className="bubble bu-1" />
+        <span className="bubble bu-2" />
+        <span className="bubble bu-3" />
+        <span className="bubble bu-4" />
+        <span className="bubble bu-5" />
+        <span className="bubble bu-6" />
+      </div>
+
       <header className="home-head">
+        <img className="home-logo" src={logo} alt="星禾星穗" />
         <div className="home-brand">xinghe-helper</div>
         <h1>组织者入口</h1>
         <p className="home-lead">

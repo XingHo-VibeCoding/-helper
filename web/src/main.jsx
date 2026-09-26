@@ -13,14 +13,15 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <Routes>
         <Route element={<App />}>
-          {/* 学生只会落在填写页:根网址、输错网址一律跳 /form */}
-          <Route path="/" element={<Navigate to="/form" replace />} />
+          {/* 组织者视角:根网址直达组织者入口 */}
+          <Route path="/" element={<Home />} />
+          {/* 学生只通过二维码/完整链接落进填写页 */}
           <Route path="/form" element={<StudentForm />} />
-          {/* 组织者入口:不在导航外露面,手动输网址/书签进入 */}
+          {/* 兼容旧书签:/home 仍可进入 */}
           <Route path="/home" element={<Home />} />
           <Route path="/workbench" element={<Workbench />} />
           <Route path="/overview" element={<Overview />} />
-          <Route path="*" element={<Navigate to="/form" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
